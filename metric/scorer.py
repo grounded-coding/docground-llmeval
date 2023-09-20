@@ -9,28 +9,16 @@ class LLEvaluator:
         self.device = device
         self.max_length = max_length
 
-        self.config = AutoConfig.from_pretrained(model_name_or_path, cache_dir=cache_dir)
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, cache_dir=cache_dir)
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name_or_path, config=self.config,
-                                                           cache_dir=cache_dir)
-
         self.model.eval()
         self.model.to(device)
 
-        self.softmax = nn.Softmax(dim=1)
-
-        self.pos_id = self.tokenizer("Yes")["input_ids"][0]
-        self.neg_id = self.tokenizer("No")["input_ids"][0]
+    # TODO Integrate Llama2Local as the default scorer model here
 
     def score(self, inputs, batch_size=8):
         """
             Get scores for the given samples.
             final_score = postive_score / (postive_score + negative_score)
         """
-
-        # The implementation of "forward" in T5 still requires decoder_input_ids.
-        # Therefore, we construct a random one-word target sequence.
-        # The content of the target has no effect on the final scores.
         tgts = ["No" for _ in range(len(inputs))]
 
         pos_score_list, neg_score_list = [], []

@@ -1,5 +1,7 @@
 from llama2_local import Llama2Local
 from metric.scorer import LLEvaluator
+import numpy as np
+from utils import add_prompt_instructions, print_scores
 
 # Define abstract class prompt evaluator which should define methods to build and pass a prompt for evaluation to the local model,
 # outputs a score and an explanation for a given input dialog history, knowledge string, and two candidate responses.
@@ -18,8 +20,7 @@ class DialogEvaluator:
                                    max_length=max_length, 
                                    device=device, cache_dir=cache_dir)
         self.task = 'dialogue'
-        self.dimensions = ['naturalness', 'coherence', 'engagingness', 
-                           'groundedness', 'understandability']
+        self.dimensions = ['accuracy', 'appropriateness']
 
     def evaluate(self, data, dims=None, overall=True, print_result=False):
         """
@@ -47,13 +48,13 @@ class DialogEvaluator:
             print('Evaluating {} of {} samples !!!'.format(dim, n_data))
             
             # Calculate turn-level score for other dimensions
-            if dim in ['naturalness', 'coherence', 'groundedness', 'understandability']:
+            if dim in ['accuracy', 'appropriateness']:
                 src_list, output_list, context_list = [], [], []
                 for i in range(n_data):
                     src_list.append(data[i]['source'])
                     output_list.append(data[i]['system_output'])
                     context_list.append(data[i]['context'])
-                input_list = add_question(dimension=dim, output=output_list, 
+                input_list = add_prompt_instructions(dimension=dim, output=output_list, 
                                           src=src_list, context=context_list, task=self.task)
                 score = self.scorer.score(input_list)
 
