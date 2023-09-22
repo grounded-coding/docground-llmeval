@@ -1,11 +1,9 @@
-from utils import convert_to_json
+from utils.utilities import convert_to_json
 from metric.evaluator import DialogEvaluator
 import json
 from tqdm import tqdm 
 import random
 from typing import List, Dict
-from scripts.data_scripts.get_prompts import get_prompt
-from llama_eval.prompt_llama_eval import prompt_llama_eval
 
 def generate_samples(k: int, subsample=True, dataset_split="val", dataset="data"):
     # Set k = -1 to use all samples

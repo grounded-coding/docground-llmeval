@@ -1,6 +1,34 @@
+from typing import Any
 import numpy as np
-from utils import add_prompt_instructions, print_scores
+from utils.utilities import print_scores
 import random
+
+class PromptTemplate:
+    def __init__(self) -> None:
+        self.init_prompt = "[INST] <<SYS>>"
+        self.task_prompt = "For the following multi-turn conversation between User and Assistant, you will be given a potential response for the next turn."
+        self.context_prompt = "<</SYS>> {}"
+        self.candidate_prompt = "## Response\n{}"
+        self.eval_prompt = "## Task\nFIRST provide a one-sentence explanation of your rating. SECOND, state only state only the score on a scale of 1 to 5. Follow the template.\n\n## Template\nExplanation: <one-sentence explanation>\n{} Score: <1-5>"
+        self.post_prompt = "[/INST]Explanation:"
+
+    def format_context(self, turn_history: list, knowledge_context: list):
+        # Turn history is alternating between user and system. Concatenate this list followed by the knowledge context
+        concatenated_context = ""
+        for i in range(len(turn_history)):
+            if i % 2 == 0:
+                concatenated_context += "User: " + turn_history[i] + " Assistant: "
+            else:
+                concatenated_context += turn_history[i] + " "
+        for i in range(len(knowledge_context)):
+            concatenated_context += knowledge_context[i] + " "
+        return concatenated_context
+
+    def get_prompt(self, dimension, output, turn_history: list, knowledge_context: list, dim_description="", task_description=""):
+        return self.init_prompt + self.task_prompt + " " + dim_description + " " + task_description + self.context_prompt.format(
+            self.format_context(turn_history, knowledge_context)) \
+        + "\n\n" + self.candidate_prompt.format(output) \
+        + "\n\n" + self.eval_prompt.format(dimension["name"].capitalize()) + self.post_prompt
 
 class DialogEvaluator:
     def __init__(self, prompt_scorer, max_length=1024, device='cuda:0', cache_dir=None):
@@ -10,21 +38,18 @@ class DialogEvaluator:
         self.dimension_map = {
             'appropriate': {
                 'description': 'Rate how appropriate this response is. An appropriate response is naturally connected to the previous turns and helpful for the user\'s concern. Do not consider factual correctness.',
+                'data_specific_task_description': "",
+                'name': 'appropriate'
             },
             'accurate': {
                 'description': 'Rate how accurate this response is. An accurate response is factually correct and consistent with the knowledge in the context.',
-                'data_specific_task_description': 'Context can be reviews from customers or FAQs. FAQs start after token :F: and each new review starts after token :R:.'
+                'data_specific_task_description': 'Context can be reviews from customers or FAQs. FAQs start after token :F: and each new review starts after token :R:.',
+                'name': 'accurate'
             },
         }
         self.dimensions = ["appropriate", "accurate"]
-        self.init_prompt = "[INST] <<SYS>>"
-        self.task_prompt = "For the following multi-turn conversation between User and Assistant, you will be given a potential response for the next turn."
-        self.context_prompt = "<</SYS>> {}"
-        self.candidate_prompt = "\n\n## Response\n{}\n\n## "
-        self.eval_prompt = " Task\nFIRST provide a one-sentence explanation of your rating. SECOND, state only state only the score on a scale of 1 to 5. Follow the template.\n\n## Template\nExplanation: <one-sentence explanation>\n{} Score: <1-5>"
-        self.post_prompt = "[/INST]Explanation:"
 
-    def evaluate(self, data, dims=None, overall=True, print_result=False):
+    def evaluate(self, data, dims=None, overall=True, print_result=False, expls=False):
         """
             Get the scores of all the given dimensions
 
@@ -35,10 +60,13 @@ class DialogEvaluator:
                      Overall score can be customized to a combination of scores based on different
                      dimensions. The default here is the average score of all the given dimensions.
 
+            expls: whether to print the explanation of the score on the screen for each dimension
+                     
             print_result: whether to print the average score of each dimension on the screen
         """
         n_data = len(data)
         eval_scores = [{} for _ in range(n_data)]
+        eval_expls = [{} for _ in range(n_data)]
 
         if dims == None:
             eval_dims = self.dimensions
@@ -47,6 +75,7 @@ class DialogEvaluator:
             eval_dims = dims
 
         for dim in eval_dims:
+            dimension=self.dimension_map[dim]
             print('Evaluating {} of {} samples !!!'.format(dim, n_data))
             
             src_list, output_list, context_list = [], [], []
@@ -55,10 +84,12 @@ class DialogEvaluator:
                 output_list.append(data[i]['system_output'])
                 context_list.append(data[i]['context'])
 
-            score = self.scorer.score(output_list, src_list, context_list, dimension=dim)
+            score = self.scorer.score(output_list, src_list, context_list, dimension=dimension)
             
+            # Numeric scores
             for i in range(n_data):
-                eval_scores[i][dim] = score[i]
+                eval_scores[i][dim] = score[i][dim]
+                eval_expls[i][dim] = score[i]['explanation']
 
         # Customize your overall score here.
         if overall == True:
@@ -67,5 +98,11 @@ class DialogEvaluator:
 
         if print_result == True:
             print_scores(eval_scores)
+
+        if expls == True:
+            for i in range(n_data):
+                print('Explanation of the score for sample {}:'.format(i))
+                for dim in eval_dims:
+                    print('{}: {}'.format(dim, eval_expls[i][dim]))
 
         return eval_scores
