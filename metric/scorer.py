@@ -21,6 +21,8 @@ class PromptScorer:
                                                  dim_description=dimension['description'],
                                                  task_description=dimension['data_specific_task_description'])
 
+        # print(prompt)
+
         data = {
             "inputs": prompt,
             "parameters": self.metric_config["gen_params"]
@@ -53,7 +55,7 @@ class PromptScorer:
         return {dimension["name"]: float(winner), "id": i, "explanation": explanation}
 
 
-    def score(self, output_list, src_list, context_list, dimension, batch_size=8):
+    def score(self, output_list, src_list, context_list, dimension, batch_size=16):
         # Builds a prompt and submits it in distributed fashion to the local LLM API.
         # Then extracts score and explanation from the response.
         winexpls = []

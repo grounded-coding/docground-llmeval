@@ -1,20 +1,26 @@
 # Write a test to evaluate the evaluator
 
+from data_preparation.datacollector import DSTCDataCollector
 from utils.utilities import convert_to_json
 from metric.evaluator import DialogEvaluator
 from metric.scorer import PromptScorer, PromptTemplate
 import json
 
 # Dataset specific input collector prepares the data in the format required by the evaluator
+n_indices = 150
 
-# Candidate responses is a list of strings, turn historys is a list of lists of strings, knowledge_contexts is a list of lists of relevant document strings
-candidate_responses = ["Yes I can. The Cambridge Guest House is a great place to stay. It has free wifi and is in the north of town.",
-                       "Sorry I can't. Also I have no idea what you are talking about you stupid human."]
-# Example data
-turn_historys = [["Hi, I'm looking for a guest house in the north of town. Is there one with free wifi?"],
-                 ["Hello sir can you halp me?"]]
-knowledge_contexts = [[":R: (Cambridge Guest House) Great guest house north of the town.", ":F: (Cambridge Guest House) Do you have free wifi? Yes, we have free wifi."],
-                      []]
+candidate_responses = []
+sample_indices = []
+with open("../dstc11-track5/data/val/labels.json") as f:
+    data = json.load(f)
+    for i in range(n_indices):
+        if data[i]["target"] == True:
+            candidate_responses.append(data[i]["response"])
+            sample_indices.append(i)
+
+dstc_collector = DSTCDataCollector(base_path="../dstc11-track5/data")
+
+reference_responses, turn_historys, knowledge_contexts = dstc_collector.collect_sample_contexts(sample_indices)
 
 data = convert_to_json(output_list=candidate_responses, src_list=turn_historys, context_list=knowledge_contexts)
 

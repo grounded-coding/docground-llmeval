@@ -5,28 +5,30 @@ import random
 
 class PromptTemplate:
     def __init__(self) -> None:
-        self.init_prompt = "[INST] <<SYS>>"
+        self.init_prompt = "[INST] <<SYS>> "
         self.task_prompt = "For the following multi-turn conversation between User and Assistant, you will be given a potential response for the next turn."
         self.context_prompt = "<</SYS>> {}"
         self.candidate_prompt = "## Response\n{}"
         self.eval_prompt = "## Task\nFIRST provide a one-sentence explanation of your rating. SECOND, state only state only the score on a scale of 1 to 5. Follow the template.\n\n## Template\nExplanation: <one-sentence explanation>\n{} Score: <1-5>"
         self.post_prompt = "[/INST]Explanation:"
 
-    def format_context(self, turn_history: list, knowledge_context: list):
+    def format_context(self, dimension, turn_history: list, knowledge_context: list):
         # Turn history is alternating between user and system. Concatenate this list followed by the knowledge context
-        concatenated_context = ""
+        concatenated_context = "## Conversation\n"
         for i in range(len(turn_history)):
             if i % 2 == 0:
                 concatenated_context += "User: " + turn_history[i] + " Assistant: "
             else:
                 concatenated_context += turn_history[i] + " "
-        for i in range(len(knowledge_context)):
-            concatenated_context += knowledge_context[i] + " "
+        if dimension["name"] == "accurate":
+            concatenated_context += "\n\n## Context\n"
+            for i in range(len(knowledge_context)):
+                concatenated_context += knowledge_context[i] + " "
         return concatenated_context
 
     def get_prompt(self, dimension, output, turn_history: list, knowledge_context: list, dim_description="", task_description=""):
         return self.init_prompt + self.task_prompt + " " + dim_description + " " + task_description + self.context_prompt.format(
-            self.format_context(turn_history, knowledge_context)) \
+            self.format_context(dimension, turn_history, knowledge_context)) \
         + "\n\n" + self.candidate_prompt.format(output) \
         + "\n\n" + self.eval_prompt.format(dimension["name"].capitalize()) + self.post_prompt
 
@@ -42,7 +44,7 @@ class DialogEvaluator:
                 'name': 'appropriate'
             },
             'accurate': {
-                'description': 'Rate how accurate this response is. An accurate response is factually correct and consistent with the knowledge in the context.',
+                'description': 'Rate how accurate this response is. An accurate response is factually correct and consistent with the knowledge in the context. An inaccurate response invents facts, which cannot be cited or derived from the context. Carefully assess the score if some parts of the response are correct and other parts are wrong. Do not rate helpfulness or the style of the conversation.',
                 'data_specific_task_description': 'Context can be reviews from customers or FAQs. FAQs start after token :F: and each new review starts after token :R:.',
                 'name': 'accurate'
             },
