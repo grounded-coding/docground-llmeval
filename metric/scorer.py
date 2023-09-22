@@ -26,8 +26,13 @@ class PromptScorer:
             context: the context needed to evaluate several specific dimension. For example,
                     additional factual information when evaluating engagingness and groundedness in dialogues.
         """
-        # TODO Fix this with dimension definitions from the evaluator
-        full_prompt = []
+        # TODO Integrate attributes from Evaluator class here
+
+        prompt = self.init_prompt + self.task_prompt + self.dimensions[dimension]['description'] + \
+            self.dimensions[dimension]['data_specific_task_description'] + self.post_prompt
+        # Now format the prompt with the context, response_1 and response_2
+        full_prompt = prompt.format(context, src, output, dimension.capitalize())
+    
         for i in range(len(output)):
             if dimension == 'appropriateness':
                 cur_input = 'question: Is this a natural response in the dialogue? </s> response: ' + output[i]

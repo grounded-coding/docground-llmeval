@@ -16,21 +16,13 @@ class DialogEvaluator:
                 'data_specific_task_description': 'Context can be reviews from customers or FAQs. FAQs start after token :F: and each new review starts after token :R:.'
             },
         }
-        self.dimension = ["appropriate", "accurate"]
+        self.dimensions = ["appropriate", "accurate"]
         self.init_prompt = "[INST] <<SYS>>"
         self.task_prompt = "For the following multi-turn conversation between User and Assistant, you will be given a potential response for the next turn."
         self.context_prompt = "<</SYS>> {}"
         self.candidate_prompt = "\n\n## Response\n{}\n\n## "
         self.eval_prompt = " Task\nFIRST provide a one-sentence explanation of your rating. SECOND, state only state only the score on a scale of 1 to 5. Follow the template.\n\n## Template\nExplanation: <one-sentence explanation>\n{} Score: <1-5>"
         self.post_prompt = "[/INST]Explanation:"
-
-    def build_dim_prompt(self, dimension, context, response_1, response_2):
-        # Concatenate init, task, selected dimensions and post prompts
-        prompt = self.init_prompt + self.task_prompt + self.selected_dimensions[dimension]['description'] + \
-                    self.selected_dimensions[dimension]['data_specific_task_description'] + self.post_prompt
-        # Now format the prompt with the context, response_1 and response_2
-        prompt = prompt.format(context, response_1, response_2, dimension.capitalize())
-        return prompt
 
     def evaluate(self, data, dims=None, overall=True, print_result=False):
         """

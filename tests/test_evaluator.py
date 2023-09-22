@@ -20,7 +20,7 @@ knowledge_contexts = [[":R: (Cambridge Guest House) Great guest house north of t
 
 data = convert_to_json(output_list=candidate_responses, src_list=turn_historys, context_list=knowledge_contexts)
 
-llama2local = PromptScorer(api_url="http://gpu-19.apptek.local:8080/generate")
+llama2local = PromptScorer(api_url="http://gpu-19.apptek.local:8080/generate", metric_config_file="metric_config.json", num_retries=3)
 evaluator = DialogEvaluator(llama2local)
 eval_scores = evaluator.evaluate(data, print_result=True)
 
