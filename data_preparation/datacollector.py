@@ -20,6 +20,9 @@ class DataCollector(ABC):
 
 
 class DSTCDataCollector(DataCollector):
+    """
+    Collect sample contexts for the DSTC11 Track 5 dataset. Also compatible with DSTC9 Track 1 dataset.
+    """
     def __init__(self, base_path) -> None:
         super().__init__()
         self.base_path = base_path

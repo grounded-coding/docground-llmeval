@@ -51,7 +51,7 @@ class DialogEvaluator:
         }
         self.dimensions = ["appropriate", "accurate"]
 
-    def evaluate(self, data, dims=None, overall=True, print_result=False, expls=False):
+    def evaluate(self, data, dims=None, overall=True, print_result=False, print_expls=False):
         """
             Get the scores of all the given dimensions
 
@@ -101,10 +101,10 @@ class DialogEvaluator:
         if print_result == True:
             print_scores(eval_scores)
 
-        if expls == True:
+        if print_expls == True:
             for i in range(n_data):
                 print('Explanation of the score for sample {}:'.format(i))
                 for dim in eval_dims:
                     print('{}: {}'.format(dim, eval_expls[i][dim]))
 
-        return eval_scores
+        return eval_scores, eval_expls
