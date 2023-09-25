@@ -28,6 +28,25 @@ class DSTCDataCollector(DataCollector):
         self.base_path = base_path
     
 
+    def get_samples_with_target(self, dataset_split: str = "val", dataset: str = "dstc11") -> Tuple[List[int], List[str]]:
+        """
+        Get all samples with target set to True.
+
+        :param dataset_split: The dataset split to use.
+        :param dataset: The dataset to use.
+        :return: A tuple of sample indices and candidate responses.
+        """
+        candidate_responses = []
+        sample_indices = []
+        with open(f'{self.base_path}/{dataset_split}/labels.json') as f:
+            data = json.load(f)
+            for i in range(len(data)):
+                if data[i]["target"] == True:
+                    candidate_responses.append(data[i]["response"])
+                    sample_indices.append(i)
+        return sample_indices
+
+
     def collect_sample_contexts(self, sample_indices: List[int], dataset_split: str = "val",
                                 max_n_sent=10, max_turns=10) -> Tuple[List[int], List[List[str]], List[List[str]]]:
         reference_responses = []
