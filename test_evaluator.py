@@ -2,8 +2,8 @@
 
 from data_preparation.datacollector import DSTCDataCollector
 from utils.utilities import convert_to_json
-from metric.evaluator import DialogEvaluator
-from metric.scorer import PromptScorer, PromptTemplate
+from lleval.evaluator import DialogEvaluator
+from lleval.scorer import PromptScorer, PromptTemplate
 import json
 
 # Dataset specific input collector prepares the data in the format required by the evaluator

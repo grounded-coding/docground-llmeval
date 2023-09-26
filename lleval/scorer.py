@@ -4,7 +4,7 @@ import requests
 import json
 import re
 from concurrent.futures import ProcessPoolExecutor, as_completed, ThreadPoolExecutor
-from metric.evaluator import PromptTemplate
+from lleval.evaluator import PromptTemplate
 
 class PromptScorer:
     # This is a technical class. It receives a pre-built prompt and submits it to the local LLM API.
