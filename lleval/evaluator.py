@@ -1,7 +1,6 @@
 from typing import Any
 import numpy as np
-from utils.utilities import print_scores
-import random
+from .utils.utilities import print_scores
 
 class PromptTemplate:
     def __init__(self) -> None:
