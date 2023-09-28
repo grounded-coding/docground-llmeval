@@ -16,9 +16,9 @@ class PromptTemplate:
         concatenated_context = "## Conversation\n"
         for i in range(len(turn_history)):
             if i % 2 == 0:
-                concatenated_context += "User: " + turn_history[i] + " Assistant: "
+                concatenated_context += "User: " + turn_history[i] + " "
             else:
-                concatenated_context += turn_history[i] + " "
+                concatenated_context += "Assistant: " + turn_history[i] + " "
         if dimension["name"] == "accurate":
             concatenated_context += "\n\n## Context\n"
             for i in range(len(knowledge_context)):
@@ -26,13 +26,15 @@ class PromptTemplate:
         return concatenated_context
 
     def get_prompt(self, dimension, output, turn_history: list, knowledge_context: list, dim_description="", task_description=""):
-        return self.init_prompt + self.task_prompt + " " + dim_description + " " + task_description + self.context_prompt.format(
+        prompt = self.init_prompt + self.task_prompt + " " + dim_description + " " + task_description + self.context_prompt.format(
             self.format_context(dimension, turn_history, knowledge_context)) \
         + "\n\n" + self.candidate_prompt.format(output) \
         + "\n\n" + self.eval_prompt.format(dimension["name"].capitalize()) + self.post_prompt
+        # print(prompt)
+        return prompt
 
 class DialogEvaluator:
-    def __init__(self, prompt_scorer, max_length=1024, device='cuda:0', cache_dir=None):
+    def __init__(self, prompt_scorer, max_length=1024, device='cuda:0', cache_dir=None, dataset_task_description=""):
         """ Set up evaluator for dialogues """
         self.scorer = prompt_scorer
         self.task = 'dialogue'
@@ -44,7 +46,7 @@ class DialogEvaluator:
             },
             'accurate': {
                 'description': 'Rate how accurate this response is. An accurate response is factually correct and consistent with the knowledge in the context. An inaccurate response invents facts, which cannot be cited or derived from the context. Carefully assess the score if some parts of the response are correct and other parts are wrong. Do not rate helpfulness or the style of the conversation.',
-                'data_specific_task_description': 'Context can be reviews from customers or FAQs. FAQs start after token :F: and each new review starts after token :R:.',
+                'data_specific_task_description': dataset_task_description,
                 'name': 'accurate'
             },
         }
