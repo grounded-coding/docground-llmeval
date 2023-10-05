@@ -25,7 +25,7 @@ reference_responses, turn_historys, knowledge_contexts = dstc_collector.collect_
 data = convert_to_json(output_list=candidate_responses, src_list=turn_historys, context_list=knowledge_contexts)
 
 prompt_template = PromptTemplate()
-llama2local = PromptScorer(api_url="http://gpu-19.apptek.local:8080/generate", metric_config_file="metric_likert_config.json", prompt_template=prompt_template, num_retries=3)
+llama2local = PromptScorer(api_url="http://gpu-19.apptek.local:8080/generate", metric_config_file="configs/gen_config.json", prompt_template=prompt_template, num_retries=3)
 evaluator = DialogEvaluator(llama2local)
 eval_scores, eval_expls = evaluator.evaluate(data, print_result=True)
 # eval scores is a list of dictionaries with the following keys: appropriate, accurate, overall (in the example of the code above) and numeric values as values

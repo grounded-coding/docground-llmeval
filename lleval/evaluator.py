@@ -1,15 +1,20 @@
 from typing import Any
+import json
 import numpy as np
 from .utils.utilities import print_scores
 
 class PromptTemplate:
-    def __init__(self) -> None:
-        self.init_prompt = "[INST] <<SYS>> "
-        self.task_prompt = "For the following multi-turn conversation between User and Assistant, you will be given a potential response for the next turn."
-        self.context_prompt = "<</SYS>> {}"
-        self.candidate_prompt = "## Response\n{}"
-        self.eval_prompt = "## Task\nFIRST provide a one-sentence explanation of your rating. SECOND, state only state only the score on a scale of 1 to 5. Follow the template.\n\n## Template\nExplanation: <one-sentence explanation>\n{} Score: <1-5>"
-        self.post_prompt = "[/INST]Explanation:"
+    def __init__(self, prompt_config_file) -> None:
+        """ Load the prompt template from the config file which is in json"""
+        with open(prompt_config_file) as f:
+            self.prompt_config = json.load(f)
+
+        self.init_prompt = self.prompt_config["init_prompt"]
+        self.task_prompt = self.prompt_config["task_prompt"]
+        self.context_prompt = self.prompt_config["context_prompt"]
+        self.candidate_prompt = self.prompt_config["candidate_prompt"]
+        self.eval_prompt = self.prompt_config["eval_prompt"]
+        self.post_prompt = self.prompt_config["post_prompt"]
 
     def format_context(self, dimension, turn_history: list, knowledge_context: list):
         # Turn history is alternating between user and system. Concatenate this list followed by the knowledge context
