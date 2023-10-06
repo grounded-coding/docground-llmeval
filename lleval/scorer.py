@@ -18,8 +18,7 @@ class PromptScorer:
 
     def build_and_submit_prompt(self, i, output_list, src_list, context_list, dimension, method="likert"):
         prompt = self.prompt_template.get_prompt(dimension, output_list[i], src_list[i], context_list[i], 
-                                                 dim_description=dimension['description'],
-                                                 task_description=dimension['data_specific_task_description'])
+                                                 dim_description=dimension['description'])
 
         # print(prompt)
 

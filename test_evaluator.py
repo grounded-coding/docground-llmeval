@@ -1,7 +1,7 @@
 # Write a test to evaluate the evaluator
 
-from data_preparation.datacollector import DSTCDataCollector
-from utils.utilities import convert_to_json
+from lleval.data_collector import DummyDataCollector
+from lleval.utils.utilities import convert_to_json
 from lleval.evaluator import DialogEvaluator
 from lleval.scorer import PromptScorer, PromptTemplate
 import json
@@ -9,24 +9,17 @@ import json
 # Dataset specific input collector prepares the data in the format required by the evaluator
 n_indices = 150
 
-candidate_responses = []
-sample_indices = []
-with open("../dstc11-track5/data/val/labels.json") as f:
-    data = json.load(f)
-    for i in range(n_indices):
-        if data[i]["target"] == True:
-            candidate_responses.append(data[i]["response"])
-            sample_indices.append(i)
+candidate_responses = ["Ahoi", "hello", "hi"]
+sample_indices = [4,6,8]
+dummy_collector = DummyDataCollector()
 
-dstc_collector = DSTCDataCollector(base_path="../dstc11-track5/data")
-
-reference_responses, turn_historys, knowledge_contexts = dstc_collector.collect_sample_contexts(sample_indices)
+reference_responses, turn_historys, knowledge_contexts = dummy_collector.collect_sample_contexts(sample_indices)
 
 data = convert_to_json(output_list=candidate_responses, src_list=turn_historys, context_list=knowledge_contexts)
 
-prompt_template = PromptTemplate()
-llama2local = PromptScorer(api_url="http://gpu-19.apptek.local:8080/generate", metric_config_file="configs/gen_config.json", prompt_template=prompt_template, num_retries=3)
-evaluator = DialogEvaluator(llama2local)
+prompt_template = PromptTemplate(prompt_config_file="lleval/configs/prompt_likert_config.json")
+llama2local = PromptScorer(api_url="http://gpu-19.apptek.local:8080/generate", metric_config_file="lleval/configs/gen_config.json", prompt_template=prompt_template, num_retries=3)
+evaluator = DialogEvaluator(llama2local, dimension_definitions_file="lleval/configs/dimension_definitions.json")
 eval_scores, eval_expls = evaluator.evaluate(data, print_result=True)
 # eval scores is a list of dictionaries with the following keys: appropriate, accurate, overall (in the example of the code above) and numeric values as values
 # eval expls is a list of dictionaries with the following keys: appropriate, accurate, overall (in the example of the code above) and strings as values

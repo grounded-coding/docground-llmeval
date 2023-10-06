@@ -39,23 +39,20 @@ class PromptTemplate:
         return prompt
 
 class DialogEvaluator:
-    def __init__(self, prompt_scorer, max_length=1024, device='cuda:0', cache_dir=None, dataset_task_description=""):
+    def __init__(self, prompt_scorer, dimension_definitions_file, max_length=1024, device='cuda:0', cache_dir=None):
         """ Set up evaluator for dialogues """
         self.scorer = prompt_scorer
         self.task = 'dialogue'
-        self.dimension_map = {
-            'appropriate': {
-                'description': 'Rate how appropriate this response is. An appropriate response is naturally connected to the previous turns and helpful for the user\'s concern. Do not consider factual correctness.',
-                'data_specific_task_description': "",
-                'name': 'appropriate'
-            },
-            'accurate': {
-                'description': 'Rate how accurate this response is. An accurate response is factually correct and consistent with the knowledge in the context. An inaccurate response invents facts, which cannot be cited or derived from the context. Carefully assess the score if some parts of the response are correct and other parts are wrong. Do not rate helpfulness or the style of the conversation.',
-                'data_specific_task_description': dataset_task_description,
-                'name': 'accurate'
-            },
-        }
-        self.dimensions = ["appropriate", "accurate"]
+        # Load the dimension map from dimension_definitions_file
+
+        self.dimension_map = {}
+        if dimension_definitions_file is not None:
+            with open(dimension_definitions_file) as f:
+                self.dimension_map = json.load(f)
+        else:
+            raise ValueError("Dimension definitions file is not provided")
+        # Get the list of available dimensions by all keys in the dimension map
+        self.dimensions = self.dimension_map.keys()
 
     def evaluate(self, data, dims=None, overall=True, print_result=False, print_expls=False):
         """
