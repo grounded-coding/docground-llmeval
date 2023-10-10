@@ -24,14 +24,14 @@ class PromptTemplate:
                 concatenated_context += "User: " + turn_history[i] + " "
             else:
                 concatenated_context += "Assistant: " + turn_history[i] + " "
-        if dimension["name"] == "accurate":
+        if dimension["use_context"]:
             concatenated_context += "\n\n## Context\n"
             for i in range(len(knowledge_context)):
                 concatenated_context += knowledge_context[i] + " "
         return concatenated_context
 
-    def get_prompt(self, dimension, output, turn_history: list, knowledge_context: list, dim_description="", task_description=""):
-        prompt = self.init_prompt + self.task_prompt + " " + dim_description + " " + task_description + self.context_prompt.format(
+    def get_prompt(self, dimension, output, turn_history: list, knowledge_context: list, task_description=""):
+        prompt = self.init_prompt + self.task_prompt + " " + dimension["description"] + " " + task_description + self.context_prompt.format(
             self.format_context(dimension, turn_history, knowledge_context)) \
         + "\n\n" + self.candidate_prompt.format(output) \
         + "\n\n" + self.eval_prompt.format(dimension["name"].capitalize()) + self.post_prompt
