@@ -18,14 +18,29 @@ class PromptTemplate:
 
     def format_context(self, dimension, turn_history: list, knowledge_context: list):
         # Turn history is alternating between user and system. Concatenate this list followed by the knowledge context
-        concatenated_context = "## Conversation\n"
-        for i in range(len(turn_history)):
-            if i % 2 == 0:
-                concatenated_context += "User: " + turn_history[i] + " "
-            else:
-                concatenated_context += "Assistant: " + turn_history[i] + " "
-        if dimension["use_context"]:
-            concatenated_context += "\n\n## Context\n"
+        # The last element of the turn history is always the system response
+        concatenated_context = ""
+        if dimension["use_history"]:
+            n_turns = dimension["history_turns"]
+            total_turns = len(turn_history)
+            # only consider last n_turns
+            if total_turns > n_turns and n_turns > 0:
+                turn_history = turn_history[total_turns - n_turns:]
+
+            concatenated_context = "## Conversation\n"
+            for i in range(len(turn_history)):
+                if len(turn_history) % 2 == 0:
+                    if i % 2 == 0:
+                        concatenated_context += "Assistant: " + turn_history[i] + " "
+                    else:
+                        concatenated_context += "User: " + turn_history[i] + " "
+                else:
+                    if i % 2 == 0:
+                        concatenated_context += "User: " + turn_history[i] + " "
+                    else:
+                        concatenated_context += "Assistant: " + turn_history[i] + " "
+        if dimension["use_knowledge"]:
+            concatenated_context += "\n\n## Provided Knowledge\n"
             for i in range(len(knowledge_context)):
                 concatenated_context += knowledge_context[i] + " "
         return concatenated_context
@@ -35,7 +50,6 @@ class PromptTemplate:
             self.format_context(dimension, turn_history, knowledge_context)) \
         + "\n\n" + self.candidate_prompt.format(output) \
         + "\n\n" + self.eval_prompt.format(dimension["name"].capitalize()) + self.post_prompt
-        # print(prompt)
         return prompt
 
 class DialogEvaluator:
