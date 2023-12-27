@@ -19,8 +19,6 @@ class PromptScorer:
     def build_and_submit_prompt(self, i, output_list, src_list, context_list, dimension, method="likert"):
         prompt = self.prompt_template.get_prompt(dimension, output_list[i], src_list[i], context_list[i])
 
-        # print(prompt)
-
         data = {
             "inputs": prompt,
             "parameters": self.metric_config["gen_params"]
@@ -33,7 +31,10 @@ class PromptScorer:
         success = False
         for _ in range(self.num_retries):
             success = False
-            response_text = requests.post(self.api_url, json=data, headers=headers).text
+            try: 
+                response_text = requests.post(self.api_url, json=data, headers=headers, timeout=10).text
+            except requests.exceptions.Timeout:
+                continue
             response_text = json.loads(response_text)["generated_text"]
 
             if method == "winrate":
